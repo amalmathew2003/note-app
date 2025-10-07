@@ -124,67 +124,87 @@ class _NotesListScreenState extends State<NotesListScreen> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: notes.length,
-            itemBuilder: (_, index) {
-              final note = notes[index];
-              final text = note['content'] ?? '';
+        return ListView.builder(
+  padding: const EdgeInsets.all(12),
+  itemCount: notes.length,
+  itemBuilder: (_, index) {
+    final note = notes[index];
+    final text = note['content'] ?? '';
+    final noteId = note['id']; // Make sure each note has a unique ID
 
-              return Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  title: Text(
-                    note['title'] ?? 'Untitled Note',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 6.0),
-                    child: Text(
-                      maxLines: 3,
-                      text.length > 100
-                          ? "${text.substring(0, 100)}....."
-                          : text,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => NoteDetailScreen(note: note),
-                      ),
-                    );
-                  },
-                  trailing: Wrap(
-                    spacing: 4,
-                    children: userLanguages.map((lang) {
-                      return _buildLangIcon(
-                        _getLanguageLabel(lang),
-                        _getLangColor(lang),
-                        () => _listenInLanguage(text, lang),
-                      );
-                    }).toList(),
-                  ),
-                ),
+    return Dismissible(
+      key: Key(noteId.toString()), // Unique key per note
+      direction: DismissDirection.endToStart, // Swipe left to delete
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      onDismissed: (direction) async {
+        // Call your Firebase delete function here
+        await _firebaseService.deleteNote(noteId);
+        setState(() {
+          notes.removeAt(index);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Note deleted")),
+        );
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          title: Text(
+            note['title'] ?? 'Untitled Note',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.deepPurple,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Text(
+              maxLines: 3,
+              text.length > 100 ? "${text.substring(0, 100)}....." : text,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => NoteDetailScreen(note: note),
+              ),
+            );
+          },
+          trailing: Wrap(
+            spacing: 4,
+            children: userLanguages.map((lang) {
+              return _buildLangIcon(
+                _getLanguageLabel(lang),
+                _getLangColor(lang),
+                () => _listenInLanguage(text, lang),
               );
-            },
-          );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  },
+);
+
         },
       ),
 

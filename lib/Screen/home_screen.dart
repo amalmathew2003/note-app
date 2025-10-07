@@ -15,8 +15,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirebaseNoteService _firebaseService = FirebaseNoteService();
 
   String _text = '';
-  String _language = 'en'; // Selected language
-  List<String> _userLanguages = []; // Languages selected by user
+  String _language = 'en';
+  String _title = '';
+  List<String> _userLanguages = [];
 
   @override
   void initState() {
@@ -59,8 +60,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _saveNote() async {
     if (_text.isEmpty) return;
 
-    await _firebaseService.addNote(_text);
-    setState(() => _text = '');
+    await _firebaseService.addNoteWithTitle(
+      _title,
+      _text,
+    ); // Pass title + content
+    setState(() {
+      _text = '';
+      _title = '';
+    });
 
     if (mounted) {
       Navigator.pop(context);
@@ -83,28 +90,60 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             // 📝 Input box
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 8,
-                    color: Colors.black.withOpacity(0.1),
+            Column(
+              children: [
+                // 🏷️ Title Input
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 8,
+                        color: Colors.black.withOpacity(0.1),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              padding: const EdgeInsets.all(12),
-              child: TextField(
-                controller: TextEditingController(text: _text),
-                maxLines: 6,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Speak or type your note here...',
+                  padding: const EdgeInsets.all(12),
+                  child: TextField(
+                    controller: TextEditingController(text: _title),
+                    maxLines: 1,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Enter note title...',
+                    ),
+                    onChanged: (val) => _title = val,
+                  ),
                 ),
-                onChanged: (val) => _text = val,
-              ),
+
+                const SizedBox(height: 12),
+
+                // 📝 Note Content Input (existing)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 8,
+                        color: Colors.black.withOpacity(0.1),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  child: TextField(
+                    controller: TextEditingController(text: _text),
+                    maxLines: 6,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Speak or type your note here...',
+                    ),
+                    onChanged: (val) => _text = val,
+                  ),
+                ),
+              ],
             ),
+
             const SizedBox(height: 20),
 
             // 🎤 Speak and 💾 Save buttons
