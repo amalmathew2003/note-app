@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:translator/translator.dart';
 import 'package:aitesting/services/tts_services.dart';
 
@@ -14,6 +15,22 @@ class NoteDetailScreen extends StatefulWidget {
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   final TtsService _ttsService = TtsService();
   final translator = GoogleTranslator();
+
+  List<String> userLanguages = []; // will load from SharedPreferences
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserLanguages();
+  }
+
+  // Load preferred languages from SharedPreferences
+  Future<void> _loadUserLanguages() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userLanguages = prefs.getStringList('preferred_languages') ?? ['en'];
+    });
+  }
 
   // 🔊 Speak note text
   void _speakNote(String text, String lang) async {
@@ -73,36 +90,64 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
             const SizedBox(height: 16),
 
-            // 🔊 3 Language Listen Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildLangIcon(
-                  "EN",
-                  Colors.blue,
-                  () => _listenInLanguage(content, 'en'),
-                ),
-                _buildLangIcon(
-                  "ML",
-                  Colors.green,
-                  () => _listenInLanguage(content, 'ml'),
-                ),
-                _buildLangIcon(
-                  "KN",
-                  Colors.orange,
-                  () => _listenInLanguage(content, 'kn'),
-                ),
-                _buildLangIcon(
-                  "HI",
-                  Colors.purple,
-                  () => _listenInLanguage(content, 'hi'),
-                ),
-              ],
-            ),
+            // 🔊 Generate listen buttons dynamically
+            if (userLanguages.isNotEmpty)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: userLanguages.map((lang) {
+                  final label = _getLanguageLabel(lang);
+                  final color = _getLangColor(lang); // Map lang → color
+                  return _buildLangIcon(
+                    label.toUpperCase(),
+                    color,
+                    () => _listenInLanguage(content, lang),
+                  );
+                }).toList(),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  // 🔄 Map language code → readable label
+  String _getLanguageLabel(String code) {
+    switch (code) {
+      case 'en':
+        return "Eng";
+      case 'ml':
+        return "Mal";
+      case 'kn':
+        return "Kan";
+      case 'hi':
+        return "Hin";
+      case 'ta':
+        return "Tam";
+      case 'te':
+        return "Telu";
+      default:
+        return code.toUpperCase();
+    }
+  }
+
+  // 🎨 Map language code → color for button
+  Color _getLangColor(String code) {
+    switch (code) {
+      case 'en':
+        return Colors.blue;
+      case 'ml':
+        return Colors.green;
+      case 'kn':
+        return Colors.orange;
+      case 'hi':
+        return Colors.purple;
+      case 'ta':
+        return Colors.teal;
+      case 'te':
+        return Colors.brown;
+      default:
+        return Colors.grey;
+    }
   }
 
   // 🔘 Reusable Language Icon Button
