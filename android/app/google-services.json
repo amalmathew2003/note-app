@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "692445282265",
+    "firebase_url": "https://caramel-caster-466105-n4-default-rtdb.firebaseio.com",
+    "project_id": "caramel-caster-466105-n4",
+    "storage_bucket": "caramel-caster-466105-n4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:692445282265:android:4a60fdc13ac71f144f63c8",
+        "android_client_info": {
+          "package_name": "com.example.aitesting"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFLvdFLrrAwqbGVw9M_ZSWlHD_7BtQkYk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:692445282265:android:eed8e20a3c911afe4f63c8",
+        "android_client_info": {
+          "package_name": "com.example.social_feed_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFLvdFLrrAwqbGVw9M_ZSWlHD_7BtQkYk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
