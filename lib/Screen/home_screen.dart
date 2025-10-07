@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aitesting/services/firebase_note_services.dart';
 import 'package:aitesting/services/speech_services.dart';
-import 'package:aitesting/services/tts_services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,31 +12,46 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final SpeechService _speechService = SpeechService();
-  final TtsService _ttsService = TtsService();
   final FirebaseNoteService _firebaseService = FirebaseNoteService();
 
   String _text = '';
-  String _language = 'en'; // English, Malayalam, Kannada
+  String _language = 'en'; // Selected language
+  List<String> _userLanguages = []; // Languages selected by user
 
   @override
   void initState() {
     super.initState();
     _speechService.initSpeech();
+    _loadUserLanguages();
   }
 
-  // 🎙️ Record speech
+  Future<void> _loadUserLanguages() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userLanguages = prefs.getStringList('preferred_languages') ?? ['en'];
+    });
+  }
+
+  // 🎙️ Record speech dynamically based on selected language
   void _recordSpeech() async {
+    if (_userLanguages.isEmpty) return;
+
     bool available = await _speechService.initSpeech();
     if (!available) return;
 
-    String result = await _speechService.listen(
-      localeId: _language == 'en'
-          ? 'en-US'
-          : _language == 'ml'
-          ? 'ml-IN'
-          : 'kn-IN',
-    );
+    // Map language code → localeId
+    final localeMap = {
+      'en': 'en-US',
+      'ml': 'ml-IN',
+      'kn': 'kn-IN',
+      'hi': 'hi-IN',
+      'ta': 'ta-IN',
+      'te': 'te-IN',
+    };
 
+    final localeId = localeMap[_language] ?? 'en-US';
+
+    String result = await _speechService.listen(localeId: localeId);
     setState(() => _text = result);
   }
 
@@ -48,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _text = '');
 
     if (mounted) {
-      Navigator.pop(context); // Go back to list screen after saving
+      Navigator.pop(context);
     }
   }
 
@@ -110,21 +125,50 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // 🌐 Language selector
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildLanguageChip("English", 'en'),
-                const SizedBox(width: 10),
-                _buildLanguageChip("Malayalam", 'ml'),
-                const SizedBox(width: 10),
-                _buildLanguageChip("Kannada", 'kn'),
-              ],
-            ),
+            // 🌐 Dynamic Language selector
+            if (_userLanguages.isNotEmpty)
+              Wrap(
+                spacing: 10,
+                children: _userLanguages.map((code) {
+                  final label = _getLanguageLabel(code);
+                  final selected = _language == code;
+                  return ChoiceChip(
+                    label: Text(label),
+                    selected: selected,
+                    selectedColor: Colors.deepPurple,
+                    backgroundColor: Colors.grey.shade300,
+                    labelStyle: TextStyle(
+                      color: selected ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    onSelected: (_) => setState(() => _language = code),
+                  );
+                }).toList(),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  // 🔄 Map language code → readable label
+  String _getLanguageLabel(String code) {
+    switch (code) {
+      case 'en':
+        return "English";
+      case 'ml':
+        return "Malayalam";
+      case 'kn':
+        return "Kannada";
+      case 'hi':
+        return "Hindi";
+      case 'ta':
+        return "Tamil";
+      case 'te':
+        return "Telugu";
+      default:
+        return code.toUpperCase();
+    }
   }
 
   // 🔘 Gradient Button widget
@@ -161,22 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  // 🌐 Language Chip
-  Widget _buildLanguageChip(String label, String code) {
-    final selected = _language == code;
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      selectedColor: Colors.deepPurple,
-      backgroundColor: Colors.grey.shade300,
-      labelStyle: TextStyle(
-        color: selected ? Colors.white : Colors.black,
-        fontWeight: FontWeight.w500,
-      ),
-      onSelected: (_) => setState(() => _language = code),
     );
   }
 }

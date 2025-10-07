@@ -4,6 +4,7 @@ import 'package:aitesting/services/firebase_note_services.dart';
 import 'package:aitesting/services/tts_services.dart';
 import 'package:flutter/material.dart';
 import 'package:translator/translator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotesListScreen extends StatefulWidget {
   const NotesListScreen({super.key});
@@ -16,6 +17,21 @@ class _NotesListScreenState extends State<NotesListScreen> {
   final FirebaseNoteService _firebaseService = FirebaseNoteService();
   final TtsService _ttsService = TtsService();
   final translator = GoogleTranslator();
+
+  List<String> userLanguages = []; // Loaded from SharedPreferences
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserLanguages();
+  }
+
+  Future<void> _loadUserLanguages() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userLanguages = prefs.getStringList('preferred_languages') ?? ['en'];
+    });
+  }
 
   // 🔊 Speak note text
   void _speakNote(String text, String lang) async {
@@ -32,6 +48,46 @@ class _NotesListScreenState extends State<NotesListScreen> {
     }
   }
 
+  // 🔄 Map language code → readable label
+  String _getLanguageLabel(String code) {
+    switch (code) {
+      case 'en':
+        return "EN";
+      case 'ml':
+        return "ML";
+      case 'kn':
+        return "KN";
+      case 'hi':
+        return "HI";
+      case 'ta':
+        return "TA";
+      case 'te':
+        return "TE";
+      default:
+        return code.toUpperCase();
+    }
+  }
+
+  // 🎨 Map language code → button color
+  Color _getLangColor(String code) {
+    switch (code) {
+      case 'en':
+        return Colors.blue;
+      case 'ml':
+        return Colors.green;
+      case 'kn':
+        return Colors.orange;
+      case 'hi':
+        return Colors.purple;
+      case 'ta':
+        return Colors.teal;
+      case 'te':
+        return Colors.brown;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,6 +98,14 @@ class _NotesListScreenState extends State<NotesListScreen> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         elevation: 2,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language),
+            onPressed: () {
+              Navigator.pushNamed(context, '/selectLang');
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _firebaseService.getNotes(),
@@ -89,7 +153,10 @@ class _NotesListScreenState extends State<NotesListScreen> {
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 6.0),
                     child: Text(
-                      text.length > 100 ? "${text.substring(0, 100)}..." : text,
+                      maxLines: 3,
+                      text.length > 100
+                          ? "${text.substring(0, 100)}....."
+                          : text,
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black87,
@@ -106,23 +173,13 @@ class _NotesListScreenState extends State<NotesListScreen> {
                   },
                   trailing: Wrap(
                     spacing: 4,
-                    children: [
-                      _buildLangIcon(
-                        "EN",
-                        Colors.blue,
-                        () => _listenInLanguage(text, 'en'),
-                      ),
-                      _buildLangIcon(
-                        "ML",
-                        Colors.green,
-                        () => _listenInLanguage(text, 'ml'),
-                      ),
-                      _buildLangIcon(
-                        "KN",
-                        Colors.orange,
-                        () => _listenInLanguage(text, 'kn'),
-                      ),
-                    ],
+                    children: userLanguages.map((lang) {
+                      return _buildLangIcon(
+                        _getLanguageLabel(lang),
+                        _getLangColor(lang),
+                        () => _listenInLanguage(text, lang),
+                      );
+                    }).toList(),
                   ),
                 ),
               );
@@ -152,9 +209,9 @@ class _NotesListScreenState extends State<NotesListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: .1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.5)),
+          border: Border.all(color: color.withValues(alpha: .5)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

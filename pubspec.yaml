@@ -41,6 +41,7 @@ dependencies:
   flutter_tts: ^4.2.3
   provider: ^6.1.5+1
   translator: ^1.0.4+1 
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
