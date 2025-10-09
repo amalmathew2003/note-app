@@ -14,9 +14,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final SpeechService _speechService = SpeechService();
   final FirebaseNoteService _firebaseService = FirebaseNoteService();
 
+  String _title = ''; // 🆕 Added title
   String _text = '';
-  String _language = 'en'; // Selected language
-  List<String> _userLanguages = []; // Languages selected by user
+  String _language = 'en';
+  List<String> _userLanguages = [];
 
   @override
   void initState() {
@@ -32,14 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // 🎙️ Record speech dynamically based on selected language
   void _recordSpeech() async {
     if (_userLanguages.isEmpty) return;
 
     bool available = await _speechService.initSpeech();
     if (!available) return;
 
-    // Map language code → localeId
     final localeMap = {
       'en': 'en-US',
       'ml': 'ml-IN',
@@ -55,12 +54,17 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _text = result);
   }
 
-  // 💾 Save note to Firebase
+  // 💾 Save note with title
   void _saveNote() async {
-    if (_text.isEmpty) return;
+    if (_title.isEmpty || _text.isEmpty) return;
 
-    await _firebaseService.addNote(_text);
-    setState(() => _text = '');
+    // ✅ Update this to include title in Firebase
+    await _firebaseService.addNoteWithTitle(_title, _text);
+
+    setState(() {
+      _title = '';
+      _text = '';
+    });
 
     if (mounted) {
       Navigator.pop(context);
@@ -82,7 +86,31 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // 📝 Input box
+            // 🆕 Title Field
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 8,
+                    color: Colors.black.withOpacity(0.1),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: TextField(
+                controller: TextEditingController(text: _title),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Enter title...',
+                ),
+                onChanged: (val) => _title = val,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // 📝 Note Field
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -107,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // 🎤 Speak and 💾 Save buttons
+            // 🎤 Speak & 💾 Save
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -125,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // 🌐 Dynamic Language selector
+            // 🌐 Language Selector
             if (_userLanguages.isNotEmpty)
               Wrap(
                 spacing: 10,
@@ -151,7 +179,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🔄 Map language code → readable label
   String _getLanguageLabel(String code) {
     switch (code) {
       case 'en':
@@ -171,7 +198,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 🔘 Gradient Button widget
   Widget _buildGradientButton({
     required IconData icon,
     required String text,
