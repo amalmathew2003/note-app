@@ -17,7 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String _title = ''; // 🆕 Added title
   String _text = '';
   String _language = 'en';
-  String _title = '';
   List<String> _userLanguages = [];
 
   @override
