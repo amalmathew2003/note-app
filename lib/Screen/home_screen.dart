@@ -17,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _title = ''; // 🆕 Added title
   String _text = '';
   String _language = 'en';
+  String _title = '';
   List<String> _userLanguages = [];
 
   @override
@@ -58,12 +59,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void _saveNote() async {
     if (_title.isEmpty || _text.isEmpty) return;
 
-    // ✅ Update this to include title in Firebase
-    await _firebaseService.addNoteWithTitle(_title, _text);
-
+    await _firebaseService.addNoteWithTitle(
+      _title,
+      _text,
+    ); // Pass title + content
     setState(() {
-      _title = '';
       _text = '';
+      _title = '';
     });
 
     if (mounted) {
@@ -86,53 +88,61 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // 🆕 Title Field
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 8,
-                    color: Colors.black.withOpacity(0.1),
+            // 📝 Input box
+            Column(
+              children: [
+                // 🏷️ Title Input
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 8,
+                        color: Colors.black.withOpacity(0.1),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: TextField(
-                controller: TextEditingController(text: _title),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Enter title...',
+                  padding: const EdgeInsets.all(12),
+                  child: TextField(
+                    controller: TextEditingController(text: _title),
+                    maxLines: 1,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Enter note title...',
+                    ),
+                    onChanged: (val) => _title = val,
+                  ),
                 ),
-                onChanged: (val) => _title = val,
-              ),
-            ),
-            const SizedBox(height: 20),
 
-            // 📝 Note Field
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 8,
-                    color: Colors.black.withOpacity(0.1),
+                const SizedBox(height: 12),
+
+                // 📝 Note Content Input (existing)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 8,
+                        color: Colors.black.withOpacity(0.1),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              padding: const EdgeInsets.all(12),
-              child: TextField(
-                controller: TextEditingController(text: _text),
-                maxLines: 6,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Speak or type your note here...',
+                  padding: const EdgeInsets.all(12),
+                  child: TextField(
+                    controller: TextEditingController(text: _text),
+                    maxLines: 6,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Speak or type your note here...',
+                    ),
+                    onChanged: (val) => _text = val,
+                  ),
                 ),
-                onChanged: (val) => _text = val,
-              ),
+              ],
             ),
+
             const SizedBox(height: 20),
 
             // 🎤 Speak & 💾 Save
