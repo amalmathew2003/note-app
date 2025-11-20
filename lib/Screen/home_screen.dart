@@ -223,6 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
+            // ignore: deprecated_member_use
             BoxShadow(blurRadius: 6, color: Colors.deepPurple.withOpacity(0.3)),
           ],
         ),

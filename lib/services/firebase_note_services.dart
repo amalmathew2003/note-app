@@ -1,48 +1,50 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseNoteService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // A reference to the 'notes' collection
-  CollectionReference get notesCollection => _firestore.collection('notes');
-
-  // 📝 Add note (auto-generates title from first few words)
-  Future<void> addNote(String content) async {
-    await notesCollection.add({
-      'title': content.split(' ').take(3).join(' '),
-      'content': content,
-      'createdAt': Timestamp.now(),
-    });
+  // 👇 Each user's notes collection
+  CollectionReference<Map<String, dynamic>> _userNotesCollection() {
+    final uid = _auth.currentUser!.uid;
+    return _firestore.collection('users').doc(uid).collection('notes');
   }
 
-  // 🆕 Add note with user-defined title
-  Future<void> addNoteWithTitle(String title, String content) async {
-    await notesCollection.add({
+  // 📝 Add note with auto title
+  Future<void> addNote(String content) async {
+    final title = content.split(' ').take(3).join(' ');
+
+    await _userNotesCollection().add({
       'title': title,
       'content': content,
       'createdAt': Timestamp.now(),
     });
   }
 
-  // 🔁 Stream all notes (latest first)
+  // 🆕 Add note with custom title
+  Future<void> addNoteWithTitle(String title, String content) async {
+    await _userNotesCollection().add({
+      'title': title,
+      'content': content,
+      'createdAt': Timestamp.now(),
+    });
+  }
+
+  // 🔁 Fetch only this user's notes
   Stream<List<Map<String, dynamic>>> getNotes() {
-    return notesCollection
+    return _userNotesCollection()
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
+              .map((doc) => {'id': doc.id, ...doc.data()})
               .toList(),
         );
   }
 
-  // 🗑️ Delete note by ID
+  // 🗑 Delete a note
   Future<void> deleteNote(String noteId) async {
-    try {
-      await notesCollection.doc(noteId).delete();
-    } catch (e) {
-      print("Error deleting note: $e");
-      rethrow;
-    }
+    await _userNotesCollection().doc(noteId).delete();
   }
 }

@@ -1,8 +1,11 @@
 import 'package:aitesting/Screen/home_screen.dart';
+import 'package:aitesting/Screen/language_selection_screen.dart';
+import 'package:aitesting/Screen/login_screen.dart';
 import 'package:aitesting/Screen/note_detail_screen.dart';
 import 'package:aitesting/services/firebase_note_services.dart';
 import 'package:aitesting/services/tts_services.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:translator/translator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,7 +21,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
   final TtsService _ttsService = TtsService();
   final translator = GoogleTranslator();
 
-  List<String> userLanguages = []; // Loaded from SharedPreferences
+  List<String> userLanguages = [];
 
   @override
   void initState() {
@@ -33,12 +36,31 @@ class _NotesListScreenState extends State<NotesListScreen> {
     });
   }
 
-  // 🔊 Speak note text
+  // ✅ LOGOUT FUNCTION — Firebase + SharedPrefs Clear
+  Future<void> _logout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      // Firebase Logout
+      await FirebaseAuth.instance.signOut();
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      print("Logout error: $e");
+    }
+  }
+
+  // 🔊 Speak note
   void _speakNote(String text, String lang) async {
     await _ttsService.speak(text, lang: lang);
   }
 
-  // 🌐 Translate text before speaking
+  // 🌐 Translate then speak
   Future<void> _listenInLanguage(String text, String lang) async {
     if (lang == 'en') {
       _speakNote(text, lang);
@@ -48,7 +70,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
     }
   }
 
-  // 🔄 Map language code → readable label
+  // 🌐 Language Labels
   String _getLanguageLabel(String code) {
     switch (code) {
       case 'en':
@@ -68,7 +90,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
     }
   }
 
-  // 🎨 Map language code → button color
+  // 🎨 Button Colors
   Color _getLangColor(String code) {
     switch (code) {
       case 'en':
@@ -92,22 +114,92 @@ class _NotesListScreenState extends State<NotesListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xfff5f7fb),
+
+      // ==============================================
+      // 🟣 SIDE DRAWER WITH LOGOUT
+      // ==============================================
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Colors.deepPurple),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.account_circle,
+                    size: 60,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 10),
+
+                  // ⭐ USER NAME & EMAIL HERE
+                  Text(
+                    FirebaseAuth.instance.currentUser?.displayName ?? "User",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+
+                  Text(
+                    FirebaseAuth.instance.currentUser?.email ?? "No Email",
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text("My Notes"),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text("Change Languages"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LanguageSelectionScreen(),
+                  ),
+                );
+              },
+            ),
+
+            const Divider(),
+
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text("Logout", style: TextStyle(color: Colors.red)),
+              onTap: _logout,
+            ),
+          ],
+        ),
+      ),
+
+      // ==========================
+      // 🟣 APP BAR
+      // ==========================
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         title: const Text("My Notes"),
         centerTitle: true,
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
-        elevation: 2,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.language),
-            onPressed: () {
-              Navigator.pushNamed(context, '/selectLang');
-            },
-          ),
-        ],
+        elevation: 3,
       ),
+
+      // ==========================
+      // 🟣 BODY — LIST OF NOTES
+      // ==========================
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _firebaseService.getNotes(),
         builder: (context, snapshot) {
@@ -125,108 +217,82 @@ class _NotesListScreenState extends State<NotesListScreen> {
             );
           }
 
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            switchInCurve: Curves.easeIn,
-            switchOutCurve: Curves.easeOut,
-            child: ListView.builder(
-              key: ValueKey(notes.length),
-              padding: const EdgeInsets.all(12),
-              itemCount: notes.length,
-              itemBuilder: (_, index) {
-                final note = notes[index];
-                final text = note['content'] ?? '';
-                final noteId = note['id'];
+          return ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: notes.length,
+            itemBuilder: (_, index) {
+              final note = notes[index];
+              final text = note['content'] ?? '';
+              final noteId = note['id'];
 
-                return TweenAnimationBuilder(
-                  key: ValueKey(noteId),
-                  duration: const Duration(milliseconds: 350),
-                  tween: Tween<Offset>(
-                    begin: const Offset(0, 0.15),
-                    end: Offset.zero,
+              return Dismissible(
+                key: ValueKey(noteId),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  color: Colors.red,
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (_) async {
+                  await _firebaseService.deleteNote(noteId);
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text("Note deleted")));
+                },
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  curve: Curves.easeOut,
-                  builder: (context, offset, child) {
-                    return Transform.translate(
-                      offset: offset * 100,
-                      child: child,
-                    );
-                  },
-                  child: Dismissible(
-                    key: ValueKey(noteId),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      color: Colors.red,
-                      child: const Icon(Icons.delete, color: Colors.white),
+                  child: ListTile(
+                    title: Text(
+                      note['title'] ?? 'Untitled Note',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.deepPurple,
+                      ),
                     ),
-                    onDismissed: (direction) async {
-                      await _firebaseService.deleteNote(noteId);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Note deleted")),
+                    subtitle: Text(
+                      text.length > 100
+                          ? "${text.substring(0, 100)}....."
+                          : text,
+                      maxLines: 3,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => NoteDetailScreen(note: note),
+                        ),
                       );
                     },
-                    child: Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      child: ListTile(
-                        title: Text(
-                          note['title'] ?? 'Untitled Note',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.deepPurple,
-                          ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 6.0),
-                          child: Text(
-                            text.length > 100
-                                ? "${text.substring(0, 100)}....."
-                                : text,
-                            maxLines: 3,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => NoteDetailScreen(note: note),
-                            ),
-                          );
-                        },
-                        trailing: Wrap(
-                          spacing: 4,
-                          children: userLanguages.map((lang) {
-                            return _buildLangIcon(
-                              _getLanguageLabel(lang),
-                              _getLangColor(lang),
-                              () => _listenInLanguage(text, lang),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                    trailing: Wrap(
+                      spacing: 6,
+                      children: userLanguages.map((lang) {
+                        return _buildLangIcon(
+                          _getLanguageLabel(lang),
+                          _getLangColor(lang),
+                          () => _listenInLanguage(text, lang),
+                        );
+                      }).toList(),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           );
         },
       ),
 
-      // 🟣 Floating Add Button → Opens HomeScreen
+      // ==========================
+      // 🟣 ADD NOTE BUTTON
+      // ==========================
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.add, color: Colors.white, size: 30),
+        child: const Icon(Icons.add, color: Colors.white),
         onPressed: () {
           Navigator.push(
             context,
@@ -244,9 +310,9 @@ class _NotesListScreenState extends State<NotesListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: .1),
+          color: color.withOpacity(.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withValues(alpha: .5)),
+          border: Border.all(color: color.withOpacity(.5)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -260,7 +326,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.volume_up, size: 18, color: color),
+            Icon(Icons.volume_up, size: 16, color: color),
           ],
         ),
       ),
