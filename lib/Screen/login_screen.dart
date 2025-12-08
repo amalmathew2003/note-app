@@ -1,3 +1,4 @@
+import 'package:aitesting/Screen/notes_list_screen.dart';
 import 'package:aitesting/Screen/sign_up_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen>
   final TextEditingController passwordController = TextEditingController();
 
   bool isLoading = false;
-  bool _passwordVisible = false; 
+  bool _passwordVisible = false;
 
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -48,17 +49,21 @@ class _LoginScreenState extends State<LoginScreen>
           child: Center(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.note_alt_rounded,
-                      size: 80,
-                      color: Colors.deepPurple,
+                    CircleAvatar(
+                      radius: 80, // ← increase size here
+                      backgroundColor: Colors.transparent,
+                      backgroundImage: const AssetImage("assets/gif/logo.jpg"),
                     ),
 
-                    const SizedBox(height: 10),
-
+                    // Icon(
+                    //   Icons.note_alt_rounded,
+                    //   size: 80,
+                    //   color: Colors.deepPurple,
+                    // ),
+                    // const SizedBox(height: 2),
                     Text(
                       "Welcome Back 👋",
                       style: GoogleFonts.poppins(
@@ -132,19 +137,17 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-
   // Password with Eye Icon
   // -----------------------
   Widget _passwordField() {
     return TextField(
       controller: passwordController,
-      obscureText: !_passwordVisible, 
+      obscureText: !_passwordVisible,
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,
         prefixIcon: const Icon(Icons.lock_outline, color: Colors.deepPurple),
 
-      
         suffixIcon: IconButton(
           icon: Icon(
             _passwordVisible ? Icons.visibility : Icons.visibility_off,
@@ -169,7 +172,6 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-
   // Login Function
   // -----------------------
   Future<void> loginUser() async {
@@ -180,6 +182,10 @@ class _LoginScreenState extends State<LoginScreen>
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => NotesListScreen()),
+      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -188,7 +194,6 @@ class _LoginScreenState extends State<LoginScreen>
 
     setState(() => isLoading = false);
   }
-
 
   // Glass Container
   // -----------------------
@@ -235,42 +240,70 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _modernButton({
-    required String text,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedScale(
-        scale: isLoading ? 0.97 : 1.0,
-        duration: const Duration(milliseconds: 150),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            gradient: LinearGradient(
-              colors: [
-                Colors.deepPurple.withOpacity(0.9),
-                Colors.indigo.withOpacity(0.9),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.deepPurple.withOpacity(0.4),
-                blurRadius: 15,
-                spreadRadius: 1,
-                offset: const Offset(0, 6),
-              ),
-            ],
+ Widget _modernButton({
+  required String text,
+  required IconData icon,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: AnimatedScale(
+      scale: isLoading ? 0.95 : 1.0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutBack,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+
+        // 🔥 Pulse glow animation
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: LinearGradient(
+            colors: isLoading
+                ? [
+                    Colors.deepPurple.withOpacity(0.6),
+                    const Color(0xFF3F51B5).withOpacity(0.6),
+                  ]
+                : [
+                    Colors.deepPurple.withOpacity(0.9),
+                    const Color(0xFF3F51B5).withOpacity(0.9),
+                  ],
           ),
+
+          // Glow increases when loading
+          boxShadow: [
+            BoxShadow(
+              color: Colors.deepPurple.withOpacity(isLoading ? 0.7 : 0.4),
+              blurRadius: isLoading ? 25 : 15,
+              spreadRadius: isLoading ? 2 : 1,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          opacity: isLoading ? 0.6 : 1.0,
           child: Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: Colors.white, size: 22),
+                // ⏳ Loading icon animation
+                AnimatedRotation(
+                  turns: isLoading ? 1 : 0,
+                  duration: const Duration(seconds: 1),
+                  curve: Curves.linear,
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+
                 const SizedBox(width: 10),
+
                 Text(
                   text,
                   style: GoogleFonts.poppins(
@@ -285,6 +318,8 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

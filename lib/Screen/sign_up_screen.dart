@@ -259,38 +259,81 @@ class _SignupScreenState extends State<SignupScreen>
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(30),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Colors.deepPurple, Colors.indigo],
-          ),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 10,
-              color: Colors.deepPurple.withOpacity(0.3),
+    return GestureDetector(
+      onTap: isLoading ? null : onTap,
+      child: AnimatedScale(
+        scale: isLoading ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutBack,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+
+            // ⭐ Gradient animation
+            gradient: LinearGradient(
+              colors: isLoading
+                  ? [
+                      Colors.deepPurple.withOpacity(0.5),
+                      Colors.indigo.withOpacity(0.5),
+                    ]
+                  : [
+                      Colors.deepPurple.withOpacity(0.9),
+                      Colors.indigo.withOpacity(0.9),
+                    ],
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              text,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+
+            // ⭐ Pulse glow animation
+            boxShadow: [
+              BoxShadow(
+                color: Colors.deepPurple.withOpacity(isLoading ? 0.65 : 0.35),
+                blurRadius: isLoading ? 25 : 12,
+                spreadRadius: isLoading ? 2 : 1,
+                offset: const Offset(0, 6),
               ),
-            ),
-          ],
+            ],
+          ),
+
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            child: isLoading
+                ? SizedBox(
+                    key: const ValueKey("loading"),
+                    height: 26,
+                    width: 26,
+
+                    // ⭐ Rotating loading animation
+                    child: AnimatedRotation(
+                      turns: isLoading ? 1 : 0,
+                      duration: const Duration(seconds: 1),
+                      curve: Curves.linear,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2.7,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : Row(
+                    key: const ValueKey("btn"),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text(
+                        text,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
