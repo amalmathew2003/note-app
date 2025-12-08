@@ -278,19 +278,19 @@ class _SignupScreenState extends State<SignupScreen>
             gradient: LinearGradient(
               colors: isLoading
                   ? [
-                      Colors.deepPurple.withOpacity(0.5),
-                      Colors.indigo.withOpacity(0.5),
+                      Colors.deepPurple.withValues(alpha: .5),
+                      Colors.indigo.withValues(alpha:0.5),
                     ]
                   : [
-                      Colors.deepPurple.withOpacity(0.9),
-                      Colors.indigo.withOpacity(0.9),
+                      Colors.deepPurple.withValues(alpha:0.9),
+                      Colors.indigo.withValues(alpha:0.9),
                     ],
             ),
 
             // ⭐ Pulse glow animation
             boxShadow: [
               BoxShadow(
-                color: Colors.deepPurple.withOpacity(isLoading ? 0.65 : 0.35),
+                color: Colors.deepPurple.withValues(alpha:isLoading ? 0.65 : 0.35),
                 blurRadius: isLoading ? 25 : 12,
                 spreadRadius: isLoading ? 2 : 1,
                 offset: const Offset(0, 6),

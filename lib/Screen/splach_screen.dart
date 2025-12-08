@@ -16,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     /// Wait for GIF animation
-    Future.delayed(const Duration(seconds: 9), () {
+    Future.delayed(const Duration(seconds: 5), () {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
@@ -33,39 +33,50 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     backgroundColor: Colors.black,
+  //     body: Container(
+  //       decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.circular(22),
+  //         gradient: LinearGradient(
+  //           colors: [
+  //             Colors.deepPurple.withValues(alpha: .9),
+  //             const Color(0xFF3F51B5).withValues(alpha: .9),
+  //           ],
+  //           begin: AlignmentGeometry.centerLeft,
+  //           end: AlignmentGeometry.centerRight,
+  //         ),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: Colors.deepPurple.withValues(alpha: .4),
+  //             blurRadius: 15,
+  //             spreadRadius: 1,
+  //             offset: const Offset(0, 6),
+  //           ),
+  //         ],
+  //         image: DecorationImage(image: AssetImage("assets/gif/g.gif")),
+  //       ),
+  //     ),
+  //     // body: Center(
+  //     //   child: Image.asset(
+  //     //     'assets/gif/g.gif',
+  //     //     width: 250,
+  //     //     fit: BoxFit.contain,
+  //     //   ),
+  //     // ),
+  //   );
+  // }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: LinearGradient(
-            colors: [
-              Colors.deepPurple.withValues(alpha: .9),
-              const Color(0xFF3F51B5).withValues(alpha: .9),
-            ],
-            begin: AlignmentGeometry.centerLeft,
-            end: AlignmentGeometry.centerRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.deepPurple.withValues(alpha: .4),
-              blurRadius: 15,
-              spreadRadius: 1,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          image: DecorationImage(image: AssetImage("assets/gif/g.gif")),
+      body: SizedBox.expand(
+        child: Image.asset(
+          "assets/gif/g.gif",
+          fit: BoxFit.cover, // FULL SCREEN
         ),
       ),
-      // body: Center(
-      //   child: Image.asset(
-      //     'assets/gif/g.gif',
-      //     width: 250,
-      //     fit: BoxFit.contain,
-      //   ),
-      // ),
     );
   }
 }
