@@ -15,7 +15,7 @@ class NoteDetailScreen extends StatefulWidget {
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   final TtsService _ttsService = TtsService();
   final translator = GoogleTranslator();
-  bool isPlaying = true;
+  bool isPlaying = false;
 
   List<String> userLanguages = [];
 
@@ -121,11 +121,15 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
                       icon: const Icon(Icons.stop, color: Colors.white),
-                      label: const Text("Stop",
-                          style: TextStyle(color: Colors.white)),
+                      label: const Text(
+                        "Stop",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
