@@ -15,16 +15,34 @@ class NoteDetailScreen extends StatefulWidget {
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   final TtsService _ttsService = TtsService();
   final translator = GoogleTranslator();
+  bool isPlaying = true;
 
-  List<String> userLanguages = []; // will load from SharedPreferences
+  List<String> userLanguages = [];
 
   @override
   void initState() {
     super.initState();
     _loadUserLanguages();
+
+    // 🔊 Update play/stop UI based on TTS state
+    _ttsService.tts.setCompletionHandler(() {
+      setState(() => isPlaying = false);
+    });
+
+    _ttsService.tts.setCancelHandler(() {
+      setState(() => isPlaying = false);
+    });
+
+    _ttsService.tts.setPauseHandler(() {
+      setState(() => isPlaying = false);
+    });
+
+    _ttsService.tts.setContinueHandler(() {
+      setState(() => isPlaying = true);
+    });
   }
 
-  // Load preferred languages from SharedPreferences
+  // Load preferred languages
   Future<void> _loadUserLanguages() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -39,6 +57,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
   // 🌐 Translate text before speaking
   Future<void> _listenInLanguage(String text, String lang) async {
+    setState(() => isPlaying = true);
+
     if (lang == 'en') {
       _speakNote(text, lang);
     } else {
@@ -90,20 +110,35 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
             const SizedBox(height: 16),
 
-            // 🔊 Generate listen buttons dynamically
+            // 🔊 Play buttons OR Stop button
             if (userLanguages.isNotEmpty)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: userLanguages.map((lang) {
-                  final label = _getLanguageLabel(lang);
-                  final color = _getLangColor(lang); // Map lang → color
-                  return _buildLangIcon(
-                    label.toUpperCase(),
-                    color,
-                    () => _listenInLanguage(content, lang),
-                  );
-                }).toList(),
-              ),
+              isPlaying
+                  ? ElevatedButton.icon(
+                      onPressed: () {
+                        _ttsService.stop();
+                        setState(() => isPlaying = false);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                      ),
+                      icon: const Icon(Icons.stop, color: Colors.white),
+                      label: const Text("Stop",
+                          style: TextStyle(color: Colors.white)),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: userLanguages.map((lang) {
+                        final label = _getLanguageLabel(lang);
+                        final color = _getLangColor(lang);
+                        return _buildLangIcon(
+                          label.toUpperCase(),
+                          color,
+                          () => _listenInLanguage(content, lang),
+                        );
+                      }).toList(),
+                    ),
           ],
         ),
       ),

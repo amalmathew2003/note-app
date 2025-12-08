@@ -269,16 +269,16 @@ class _NotesListScreenState extends State<NotesListScreen> {
                         ),
                       );
                     },
-                    trailing: Wrap(
-                      spacing: 6,
-                      children: userLanguages.map((lang) {
-                        return _buildLangIcon(
-                          _getLanguageLabel(lang),
-                          _getLangColor(lang),
-                          () => _listenInLanguage(text, lang),
-                        );
-                      }).toList(),
-                    ),
+                    // trailing: Wrap(
+                    //   spacing: 6,
+                    //   children: userLanguages.map((lang) {
+                    //     return _buildLangIcon(
+                    //       _getLanguageLabel(lang),
+                    //       _getLangColor(lang),
+                    //       () => _listenInLanguage(text, lang),
+                    //     );
+                    //   }).toList(),
+                    // ),
                   ),
                 ),
               );
