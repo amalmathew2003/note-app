@@ -1,5 +1,5 @@
-
 import 'package:aitesting/Screen/splach_screen.dart';
+import 'package:aitesting/services/tts_route_observer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorObservers: [TtsRouteObserver()],
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.deepPurple),
       home: const SplashScreen(),

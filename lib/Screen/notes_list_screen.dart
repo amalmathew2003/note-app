@@ -3,7 +3,6 @@ import 'package:aitesting/Screen/language_selection_screen.dart';
 import 'package:aitesting/Screen/login_screen.dart';
 import 'package:aitesting/Screen/note_detail_screen.dart';
 import 'package:aitesting/services/firebase_note_services.dart';
-import 'package:aitesting/services/tts_services.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:translator/translator.dart';
@@ -18,7 +17,6 @@ class NotesListScreen extends StatefulWidget {
 
 class _NotesListScreenState extends State<NotesListScreen> {
   final FirebaseNoteService _firebaseService = FirebaseNoteService();
-  final TtsService _ttsService = TtsService();
   final translator = GoogleTranslator();
 
   List<String> userLanguages = [];
@@ -55,60 +53,6 @@ class _NotesListScreenState extends State<NotesListScreen> {
     }
   }
 
-  // 🔊 Speak note
-  void _speakNote(String text, String lang) async {
-    await _ttsService.speak(text, lang: lang);
-  }
-
-  // 🌐 Translate then speak
-  Future<void> _listenInLanguage(String text, String lang) async {
-    if (lang == 'en') {
-      _speakNote(text, lang);
-    } else {
-      final translation = await translator.translate(text, to: lang);
-      _speakNote(translation.text, lang);
-    }
-  }
-
-  // 🌐 Language Labels
-  String _getLanguageLabel(String code) {
-    switch (code) {
-      case 'en':
-        return "EN";
-      case 'ml':
-        return "ML";
-      case 'kn':
-        return "KN";
-      case 'hi':
-        return "HI";
-      case 'ta':
-        return "TA";
-      case 'te':
-        return "TE";
-      default:
-        return code.toUpperCase();
-    }
-  }
-
-  // 🎨 Button Colors
-  Color _getLangColor(String code) {
-    switch (code) {
-      case 'en':
-        return Colors.blue;
-      case 'ml':
-        return Colors.green;
-      case 'kn':
-        return Colors.orange;
-      case 'hi':
-        return Colors.purple;
-      case 'ta':
-        return Colors.teal;
-      case 'te':
-        return Colors.brown;
-      default:
-        return Colors.grey;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
