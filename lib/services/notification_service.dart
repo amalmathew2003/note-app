@@ -15,7 +15,7 @@ class NotificationService {
   Future<void> init() async {
     tz.initializeTimeZones();
     
-    // ✅ CRITICAL Timezone sync
+    // ✅ FIXED: Using dynamic/var to avoid the 'TimezoneInfo' type mismatch.
     try {
       final currentTimeZone = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(currentTimeZone.toString()));
@@ -49,11 +49,11 @@ class NotificationService {
   }) async {
     if (scheduledDate.isBefore(DateTime.now())) return;
 
-    final String channelId = sound == 'Urgent' ? 'urgent_final_v1' : 'standard_final_v1';
-    final String channelName = sound == 'Urgent' ? 'Urgent Alarms' : 'Standard Reminders';
+    final String channelId = sound == 'Urgent' ? 'alarm_v200' : 'note_v200';
+    final String channelName = sound == 'Urgent' ? 'Urgent Alarms' : 'Reminders';
     
     final Importance importance = sound == 'Urgent' ? Importance.max : Importance.high;
-    final Priority priority = sound == 'Urgent' ? Priority.high : Priority.defaultPriority;
+    final Priority priority = sound == 'Urgent' ? Priority.high : (sound == 'Gentle' ? Priority.low : Priority.defaultPriority);
 
     final tz.TZDateTime tzTime = tz.TZDateTime.local(
       scheduledDate.year,
@@ -63,7 +63,6 @@ class NotificationService {
       scheduledDate.minute,
     );
 
-    // ✅ FIXED: Using 100% NAMED parameters as required by your plugin version
     await _notificationsPlugin.zonedSchedule(
       id: id,
       title: title,
@@ -76,14 +75,14 @@ class NotificationService {
           importance: importance,
           priority: priority,
           playSound: true,
-          fullScreenIntent: sound == 'Urgent',
-          audioAttributesUsage: sound == 'Urgent' ? AudioAttributesUsage.alarm : AudioAttributesUsage.notification,
+          fullScreenIntent: true,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
           enableVibration: true,
           vibrationPattern: sound == 'Urgent' ? Int64List.fromList([0, 1000, 500, 1000]) : null,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      // Removed interpretation as it was causing 'Undefined' errors in your IDE
+      // ✅ REMOVED: 'uiLocalNotificationDateInterpretation' as it is undefined in your plugin version
     );
   }
 
@@ -94,7 +93,7 @@ class NotificationService {
       body: "I will remind you at $time",
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
-          'confirm_final_v1',
+          'confirm_v200',
           'Confirmations',
           importance: Importance.max,
           priority: Priority.high,
