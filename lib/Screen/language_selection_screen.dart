@@ -1,6 +1,9 @@
-import 'package:aitesting/Screen/notes_list_screen.dart';
+import 'package:note_app/Screen/notes_list_screen.dart';
+import 'package:note_app/utils/app_colors.dart';
+import 'package:note_app/main.dart'; // import themeNotifier
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({super.key});
@@ -20,7 +23,20 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     {'code': 'te', 'label': 'Telugu'},
   ];
 
-  final List<String> _selectedLanguages = [];
+  List<String> _selectedLanguages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentSelection();
+  }
+
+  Future<void> _loadCurrentSelection() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguages = prefs.getStringList('preferred_languages') ?? [];
+    });
+  }
 
   void _toggleLanguage(String code) {
     setState(() {
@@ -31,9 +47,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
           _selectedLanguages.add(code);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("You can select maximum 4 languages."),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text("Maximum 4 languages allowed.", style: GoogleFonts.outfit()),
+              backgroundColor: AppColors.primary,
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -41,130 +58,149 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     });
   }
 
-  // language_selection_screen.dart (Use Navigator.of(context).pushAndRemoveUntil)
-  // ...
   Future<void> _saveLanguages() async {
     if (_selectedLanguages.isEmpty) return;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('preferred_languages', _selectedLanguages);
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const NotesListScreen()),
-      (Route<dynamic> route) => true,
-    );
+    if (mounted) {
+      if (Navigator.of(context).canPop()) {
+        Navigator.pop(context);
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const NotesListScreen()),
+        );
+      }
+    }
   }
-  // ...
 
   @override
   Widget build(BuildContext context) {
+    bool isDark = themeNotifier.value == ThemeMode.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xfff5f7fb),
+      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
       appBar: AppBar(
-        title: const Text("Select Preferred Languages"),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white70 : Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              "Select up to 4 languages you want to use in the app:",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _allLanguages.length,
-                itemBuilder: (context, index) {
-                  final lang = _allLanguages[index];
-                  final selected = _selectedLanguages.contains(lang['code']);
-                  return GestureDetector(
-                    onTap: () => _toggleLanguage(lang['code']!),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? Colors.deepPurple.withOpacity(0.2)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: selected
-                              ? Colors.deepPurple
-                              : Colors.grey.shade300,
-                          width: selected ? 2 : 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            lang['label']!,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: selected
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                              color: selected
-                                  ? Colors.deepPurple
-                                  : Colors.black87,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark 
+              ? [AppColors.bgDark, AppColors.bgDark.withBlue(30)]
+              : [AppColors.bgLight, Colors.white],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Voice Center",
+                style: GoogleFonts.outfit(
+                  fontSize: 32, 
+                  fontWeight: FontWeight.w800, 
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Select up to 4 languages for speech recognition and smart translation.",
+                style: GoogleFonts.outfit(fontSize: 14, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+              ),
+              const SizedBox(height: 32),
+              Expanded(
+                child: ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: _allLanguages.length,
+                  itemBuilder: (context, index) {
+                    final lang = _allLanguages[index];
+                    final isSelected = _selectedLanguages.contains(lang['code']);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: InkWell(
+                        onTap: () => _toggleLanguage(lang['code']!),
+                        borderRadius: BorderRadius.circular(20),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.primary.withOpacity(0.15) : (isDark ? AppColors.surfaceDark : Colors.white),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected ? AppColors.primary : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
                             ),
                           ),
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: selected
-                                  ? Colors.deepPurple
-                                  : Colors.grey[300],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Icon(
-                                selected ? Icons.check : Icons.add,
-                                color: Colors.white,
-                                size: 20,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? AppColors.primary : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.language_rounded, 
+                                      size: 18, 
+                                      color: isSelected ? Colors.white : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    lang['label']!,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 18,
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                      color: isSelected ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight) : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle_rounded, color: AppColors.primary)
+                              else
+                                Icon(Icons.add_circle_outline_rounded, color: isDark ? Colors.white12 : Colors.black12),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _selectedLanguages.isEmpty ? null : _saveLanguages,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 14,
+                    );
+                  },
                 ),
-                backgroundColor: Colors.deepPurple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 64,
+                child: ElevatedButton(
+                  onPressed: _selectedLanguages.isEmpty ? null : _saveLanguages,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    "SAVE PREFERENCES", 
+                    style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1.5)
+                  ),
                 ),
-                elevation: 5,
               ),
-              child: const Text(
-                "Save & Continue",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );

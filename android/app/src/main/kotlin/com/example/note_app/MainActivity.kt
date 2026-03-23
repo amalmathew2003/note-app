@@ -1,4 +1,4 @@
-package com.example.aitesting
+package com.example.note_app
 
 import io.flutter.embedding.android.FlutterActivity
 
