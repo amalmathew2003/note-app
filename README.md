@@ -11,10 +11,10 @@
 
 **A voice-first workspace that turns speech into structured notes, translates them into your language, reminds you when it matters — and reads it all back to you.**
 
-### 📥 [**Download APK**](https://github.com/amalmathew2003/VoiceNotes/releases/latest)
+### 📥 [**Download APK**](https://github.com/amalmathew2003/note-app/releases/latest)
 
-[![Download](https://img.shields.io/badge/Download-APK-success?style=for-the-badge&logo=android&logoColor=white)](https://github.com/amalmathew2003/VoiceNotes/releases/latest)
-[![Latest Release](https://img.shields.io/github/v/release/amalmathew2003/VoiceNotes?style=for-the-badge&label=Latest&color=blue)](https://github.com/amalmathew2003/VoiceNotes/releases/latest)
+[![Download](https://img.shields.io/badge/Download-APK-success?style=for-the-badge&logo=android&logoColor=white)](https://github.com/amalmathew2003/note-app/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/amalmathew2003/note-app?style=for-the-badge&label=Latest&color=blue)](https://github.com/amalmathew2003/note-app/releases/latest)
 
 ```
   🎙️ SPEAK   ───▶   🤖 AI STRUCTURES   ───▶   🌐 TRANSLATE   ───▶   🔔 REMIND
@@ -164,7 +164,7 @@ class Note extends HiveObject {
 ## 🚀 Run It
 
 ### Option 1 — Install the APK directly
-1. Go to [**Releases**](https://github.com/amalmathew2003/VoiceNotes/releases/latest)
+1. Go to [**Releases**](https://github.com/amalmathew2003/note-app/releases/latest)
 2. Download `app-release.apk`
 3. Install it on your Android device (enable "Install from unknown sources" if prompted)
 
