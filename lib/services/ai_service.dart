@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AiService {
   final String _apiKey = dotenv.get('GROQ_API_KEY', fallback: '');
   final String _orgId = dotenv.get('GROQ_ORG_ID', fallback: '');
+  final String _model = dotenv.get('GROQ_MODEL', fallback: 'openai/gpt-oss-20b');
 
   Future<String> generateNote(String keyword) async {
     if (_apiKey.isEmpty) return "Error: API Key not found in .env file.";
@@ -17,10 +18,10 @@ class AiService {
         headers: {
           'Authorization': 'Bearer $_apiKey',
           'Content-Type': 'application/json',
-          'groq-organization': _orgId,
+          if (_orgId.isNotEmpty) 'groq-organization': _orgId,
         },
         body: jsonEncode({
-          'model': 'llama-3.1-8b-instant',
+          'model': _model,
           'messages': [
             {
               'role': 'system',
@@ -46,3 +47,4 @@ class AiService {
     }
   }
 }
+
